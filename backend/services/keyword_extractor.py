@@ -303,8 +303,41 @@ def extract_keywords_combined(job_description: str, top_n: int = 25) -> list[str
     return combined[:top_n]
 
 
+def _is_negated(keyword: str, text: str) -> bool:
+    """Check if a keyword appears in a negation context.
+
+    Looks for narrow negation patterns. The window after the negation
+    phrase extends until the next clause boundary (but, however, yet,
+    although, comma, semicolon, period) or 50 chars, whichever is shorter.
+    """
+    text_lower = text.lower()
+    kw_lower = keyword.lower()
+    negation_patterns = [
+        r"no\s+experience\s+(?:in|with)\s+",
+        r"not\s+familiar\s+with\s+",
+        r"without\s+knowledge\s+of\s+",
+        r"lacks?\s+experience\s+(?:in|with)\s+",
+    ]
+    # Clause boundary pattern
+    _clause_break = re.compile(r"\b(?:but|however|yet|although|though)\b|[;.,]")
+    for pat in negation_patterns:
+        for m in re.finditer(pat, text_lower):
+            window_text = text_lower[m.end():m.end() + 50]
+            # Truncate at clause boundary
+            boundary = _clause_break.search(window_text)
+            if boundary:
+                window_text = window_text[:boundary.start()]
+            if kw_lower in window_text:
+                return True
+    return False
+
+
 def _fuzzy_match(keyword: str, resume_terms: set[str], resume_lower: str) -> bool:
     """Check if keyword matches any resume term using exact, synonym, or fuzzy matching."""
+    # Check negation first — if keyword is negated, it's not a match
+    if _is_negated(keyword, resume_lower):
+        return False
+
     canon_kw = _canonicalize(keyword)
 
     # 1. Exact match (fastest path)
@@ -390,3 +423,56 @@ def compute_local_score(matched: list[str], missing: list[str]) -> int:
     if total == 0:
         return 50
     return round((len(matched) / total) * 100)
+
+
+# ---------------------------------------------------------------------------
+# JD Priority Sections: Required vs Preferred qualifications
+# ---------------------------------------------------------------------------
+
+_REQUIRED_SECTION_RE = re.compile(
+    r"(?:^|\n)\s*(?:required|minimum|must[- ]have|essential)\s*"
+    r"(?:qualifications?|skills?|requirements?|experience)?\s*:?\s*\n",
+    re.IGNORECASE,
+)
+_PREFERRED_SECTION_RE = re.compile(
+    r"(?:^|\n)\s*(?:preferred|nice[- ]to[- ]have|desired|bonus|optional)\s*"
+    r"(?:qualifications?|skills?|requirements?|experience)?\s*:?\s*\n",
+    re.IGNORECASE,
+)
+# Generic section header to detect next section boundary
+_NEXT_SECTION_RE = re.compile(
+    r"\n\s*(?:[A-Z][A-Za-z\s/&-]{2,40})\s*:\s*\n",
+)
+
+
+def _extract_section_text(text: str, header_match: re.Match) -> str:
+    """Extract text from a section header match to the next section or end."""
+    start = header_match.end()
+    # Find the next section header after this one
+    next_match = _NEXT_SECTION_RE.search(text, start)
+    end = next_match.start() if next_match else len(text)
+    return text[start:end].strip()
+
+
+def extract_jd_priority_sections(jd_text: str) -> tuple[str, str]:
+    """Split JD into required and preferred qualification sections.
+
+    Returns (required_text, preferred_text).
+    If no separation is found, all text goes to required_text.
+    """
+    required_match = _REQUIRED_SECTION_RE.search(jd_text)
+    preferred_match = _PREFERRED_SECTION_RE.search(jd_text)
+
+    required_text = ""
+    preferred_text = ""
+
+    if required_match:
+        required_text = _extract_section_text(jd_text, required_match)
+    if preferred_match:
+        preferred_text = _extract_section_text(jd_text, preferred_match)
+
+    # If no required section found, all text is required
+    if not required_text:
+        required_text = jd_text
+
+    return required_text, preferred_text

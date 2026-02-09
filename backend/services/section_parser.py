@@ -109,16 +109,31 @@ def parse_sections(text: str) -> dict[str, str]:
     return sections
 
 
-def extract_contact_info(text: str) -> dict[str, str | None]:
-    """Extract contact information from resume text."""
+def extract_contact_info(
+    text: str, ner_entities: dict | None = None
+) -> dict[str, str | None]:
+    """Extract contact information from resume text.
+
+    If ner_entities is provided, fills gaps from NER when regex misses them.
+    """
     email_match = EMAIL_RE.search(text)
     phone_match = PHONE_RE.search(text)
     linkedin_match = LINKEDIN_RE.search(text)
     github_match = GITHUB_RE.search(text)
 
+    email = email_match.group() if email_match else None
+    phone = phone_match.group().strip() if phone_match else None
+
+    # Fill gaps from NER entities if regex missed
+    if ner_entities:
+        if email is None and ner_entities.get("email"):
+            email = ner_entities["email"][0]
+        if phone is None and ner_entities.get("phone"):
+            phone = ner_entities["phone"][0]
+
     return {
-        "email": email_match.group() if email_match else None,
-        "phone": phone_match.group().strip() if phone_match else None,
+        "email": email,
+        "phone": phone,
         "linkedin": linkedin_match.group() if linkedin_match else None,
         "github": github_match.group() if github_match else None,
     }
@@ -193,14 +208,17 @@ def _parse_date(date_str: str) -> tuple[int, int]:
     return 0, 0
 
 
-def extract_experience_years(text: str) -> float:
+def extract_experience_years(
+    text: str, ner_entities: dict | None = None
+) -> float:
     """Extract total years of experience from resume text.
 
-    Uses two strategies:
+    Uses two strategies (plus optional NER):
     1. Explicit claims: "5+ years of experience"
     2. Date range calculation: sum of all role date ranges
+    3. NER years_of_experience strings (parsed for digits)
 
-    Returns the higher of the two estimates.
+    Returns the highest of all estimates.
     """
     # Strategy 1: Explicit claims
     explicit_years = 0.0
@@ -221,7 +239,17 @@ def extract_experience_years(text: str) -> float:
 
     date_years = round(total_months / 12, 1) if total_months > 0 else 0.0
 
-    return max(explicit_years, date_years)
+    # Strategy 3: NER years_of_experience
+    ner_years = 0.0
+    if ner_entities and ner_entities.get("years_of_experience"):
+        for yoe_str in ner_entities["years_of_experience"]:
+            digits = re.findall(r"\d+", yoe_str)
+            for d in digits:
+                val = float(d)
+                if val > ner_years and val < 60:
+                    ner_years = val
+
+    return max(explicit_years, date_years, ner_years)
 
 
 def extract_required_years(job_description: str) -> float:
@@ -287,11 +315,24 @@ for _level, _patterns in DEGREE_PATTERNS.items():
 _DEGREE_PRIORITY = ["phd", "masters", "bachelors", "associate"]
 
 
-def extract_education_level(text: str) -> str:
+def extract_education_level(
+    text: str, ner_entities: dict | None = None
+) -> str:
     """Detect the highest education level mentioned in text.
+
+    If ner_entities is provided, checks NER degree strings first using
+    the same degree patterns, then falls through to full-text regex.
 
     Returns one of: 'phd', 'masters', 'bachelors', 'associate', or '' if none found.
     """
+    # Check NER degree strings first (more targeted)
+    if ner_entities and ner_entities.get("degrees"):
+        for degree_str in ner_entities["degrees"]:
+            for level in _DEGREE_PRIORITY:
+                if _DEGREE_COMPILED[level].search(degree_str):
+                    return level
+
+    # Fall through to full-text regex
     for level in _DEGREE_PRIORITY:
         if _DEGREE_COMPILED[level].search(text):
             return level

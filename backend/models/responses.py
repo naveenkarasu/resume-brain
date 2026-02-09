@@ -17,6 +17,7 @@ class BulletRewrite(BaseModel):
 class SectionAnalysis(BaseModel):
     detected_sections: list[str] = []
     completeness: float = 0.0
+    entities: dict = {}  # NER-extracted entity groups
 
 
 class AnalysisResponse(BaseModel):

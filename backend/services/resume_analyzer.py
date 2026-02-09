@@ -27,21 +27,25 @@ from services.section_parser import (
     extract_required_years,
     parse_sections,
 )
+from services.resume_ner import extract_resume_entities
 from services.similarity import hybrid_similarity, section_similarities
+from services.skill_extractor import extract_skills_combined, compute_skill_overlap
 
 logger = logging.getLogger(__name__)
 
 # Weights for computing hybrid local score
-W_SEMANTIC = 0.35
-W_TFIDF = 0.30
+W_SEMANTIC = 0.30
+W_TFIDF = 0.20
 W_KEYWORD = 0.20
-W_SECTION = 0.15
+W_SKILL = 0.20  # ML skill overlap
+W_SECTION = 0.10
 
 
 def _compute_local_overall(
     tfidf_score: float,
     semantic_score: float,
     keyword_overlap: float,
+    skill_overlap: float,
     section_completeness: float,
 ) -> int:
     """Compute weighted local score from all signals. Returns 0-100."""
@@ -49,6 +53,7 @@ def _compute_local_overall(
         W_SEMANTIC * semantic_score
         + W_TFIDF * tfidf_score
         + W_KEYWORD * keyword_overlap
+        + W_SKILL * skill_overlap
         + W_SECTION * section_completeness
     )
     return min(100, max(0, round(raw * 100)))
@@ -61,16 +66,20 @@ async def analyze(resume_text: str, job_description: str) -> AnalysisResponse:
     # --- Layer 1: Section parsing ---
     sections = parse_sections(resume_text)
     section_completeness = compute_section_completeness(sections)
+
+    # --- Layer 1a: Resume NER entity extraction ---
+    ner_entities = extract_resume_entities(resume_text)
     section_analysis = SectionAnalysis(
         detected_sections=sorted(sections.keys()),
         completeness=round(section_completeness, 2),
+        entities=ner_entities,
     )
 
     # --- Layer 1b: Education level detection ---
-    education_level = extract_education_level(resume_text)
+    education_level = extract_education_level(resume_text, ner_entities=ner_entities)
 
     # --- Layer 1c: Experience years extraction ---
-    resume_years = extract_experience_years(resume_text)
+    resume_years = extract_experience_years(resume_text, ner_entities=ner_entities)
     required_years = extract_required_years(job_description)
     experience_match_score = compute_experience_match(resume_years, required_years)
 
@@ -93,16 +102,25 @@ async def analyze(resume_text: str, job_description: str) -> AnalysisResponse:
         matched_keywords, missing_keywords
     )
 
-    # --- Layer 4b: Bullet quality scoring ---
+    # --- Layer 4b: ML Skill extraction and overlap ---
+    resume_skills = extract_skills_combined(resume_text)
+    jd_skills = extract_skills_combined(job_description)
+
+    # Extract required-section skills for priority weighting
+    required_text, _ = keyword_extractor.extract_jd_priority_sections(job_description)
+    required_skills = extract_skills_combined(required_text) if required_text != job_description else None
+    skill_overlap = compute_skill_overlap(resume_skills, jd_skills, required_skills=required_skills)
+
+    # --- Layer 4c: Bullet quality scoring ---
     bullet_scores = pdf_parser.score_bullets(bullets, set(jd_keywords))
 
-    # --- Layer 4c: Keyword density analysis ---
+    # --- Layer 4d: Keyword density analysis ---
     all_keywords = matched_keywords + missing_keywords
     keyword_density = keyword_extractor.compute_keyword_density(resume_text, all_keywords)
 
     # --- Layer 5: Compute local hybrid score ---
     local_overall = _compute_local_overall(
-        tfidf_score, semantic_score, keyword_overlap, section_completeness
+        tfidf_score, semantic_score, keyword_overlap, skill_overlap, section_completeness
     )
 
     # Build local score breakdown using section-level SBERT + factual experience
@@ -146,8 +164,8 @@ async def analyze(resume_text: str, job_description: str) -> AnalysisResponse:
             education_match=breakdown_raw.get("education_match", local_breakdown.education_match),
             keywords_match=breakdown_raw.get("keywords_match", local_breakdown.keywords_match),
         )
-        # Blend: 60% LLM + 40% local NLP for the overall score
-        overall_score = round(0.6 * llm_overall + 0.4 * local_overall)
+        # Blend: 40% LLM + 60% local NLP for the overall score
+        overall_score = round(0.4 * llm_overall + 0.6 * local_overall)
 
         # Merge keyword lists: prefer LLM's richer analysis, supplement with local
         llm_matched = scoring_data.get("matched_keywords", [])

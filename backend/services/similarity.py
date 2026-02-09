@@ -1,4 +1,4 @@
-"""TF-IDF and Sentence-BERT similarity engine for resume-JD matching."""
+"""TF-IDF and JobBERT-v2 similarity engine for resume-JD matching."""
 
 import logging
 
@@ -8,21 +8,22 @@ from sklearn.metrics.pairwise import cosine_similarity as sklearn_cosine
 
 logger = logging.getLogger(__name__)
 
-# Lazy-loaded SBERT model (loaded on first use, ~420MB)
+# Lazy-loaded JobBERT-v2 model (loaded on first use, ~425MB)
+# TechWolf/JobBERT-v2: trained on millions of job postings, 1024-dim embeddings
 _sbert_model = None
 
 
 def _get_sbert_model():
-    """Load Sentence-BERT model lazily on first call."""
+    """Load JobBERT-v2 model lazily on first call."""
     global _sbert_model
     if _sbert_model is None:
         try:
             from sentence_transformers import SentenceTransformer
 
-            _sbert_model = SentenceTransformer("all-mpnet-base-v2")
-            logger.info("SBERT model loaded successfully")
+            _sbert_model = SentenceTransformer("TechWolf/JobBERT-v2")
+            logger.info("JobBERT-v2 model loaded successfully")
         except Exception as e:
-            logger.warning("Failed to load SBERT model: %s", e)
+            logger.warning("Failed to load JobBERT-v2 model: %s", e)
     return _sbert_model
 
 

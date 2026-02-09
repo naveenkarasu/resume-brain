@@ -3,10 +3,12 @@ import pytest
 from services.keyword_extractor import (
     _canonicalize,
     _extract_relevant_jd_sections,
+    _is_negated,
     _is_technical_term,
     compute_keyword_density,
     compute_keyword_overlap,
     compute_local_score,
+    extract_jd_priority_sections,
     extract_keywords,
     extract_keywords_combined,
     extract_keywords_tfidf,
@@ -205,3 +207,62 @@ and processing of job applicant personal data."""
     assert "compensation" not in kw_lower
     assert "privacy" not in kw_lower
     assert "applications" not in kw_lower
+
+
+# --- Negation detection tests ---
+
+
+def test_negation_no_experience():
+    """'no experience in X' should be detected as negated."""
+    text = "I have no experience in kubernetes or docker"
+    assert _is_negated("kubernetes", text) is True
+    assert _is_negated("docker", text) is True
+
+
+def test_negation_not_familiar():
+    """'not familiar with X' should be detected as negated."""
+    text = "I am not familiar with terraform but I know ansible"
+    assert _is_negated("terraform", text) is True
+    assert _is_negated("ansible", text) is False
+
+
+def test_negation_positive_unaffected():
+    """Positive mentions should not be detected as negated."""
+    text = "5 years of experience in Python and React development"
+    assert _is_negated("python", text) is False
+    assert _is_negated("react", text) is False
+
+
+def test_negated_keyword_goes_to_missing():
+    """Negated keywords should appear in missing, not matched."""
+    resume = "I have no experience in kubernetes but I use docker daily"
+    matched, missing = match_keywords(resume, {"kubernetes", "docker"})
+    assert "kubernetes" in missing
+    assert "docker" in matched
+
+
+# --- JD priority sections tests ---
+
+
+def test_extract_jd_priority_sections_with_required():
+    """Should split required and preferred sections."""
+    jd = """About the role:
+Build scalable systems.
+
+Required Qualifications:
+Python, React, AWS, 5+ years experience
+
+Preferred Qualifications:
+Kubernetes, GraphQL, leadership experience
+"""
+    required, preferred = extract_jd_priority_sections(jd)
+    assert "Python" in required
+    assert "Kubernetes" in preferred
+
+
+def test_extract_jd_priority_sections_no_separation():
+    """When no section headers, all text goes to required."""
+    jd = "We need Python, React, and Docker skills."
+    required, preferred = extract_jd_priority_sections(jd)
+    assert "Python" in required
+    assert preferred == ""

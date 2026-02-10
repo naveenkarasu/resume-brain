@@ -1,51 +1,121 @@
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-
-function getScoreColor(score: number): string {
-  if (score >= 85) return '#22c55e';
-  if (score >= 70) return '#84cc16';
-  if (score >= 55) return '#eab308';
-  if (score >= 40) return '#f97316';
-  return '#ef4444';
-}
 
 interface Props {
   score: number;
   visible: boolean;
 }
 
+// Shared state so ParticleField can sync with the ring
+export const ringState = { rotationY: 0, greenArc: 0, score: 0 };
+
+/**
+ * Solid gradient score ring around the globe.
+ * Green portion = match score, Red portion = remaining.
+ * Ring sits horizontal (XZ plane) like Saturn's ring.
+ * Rotates around Y axis to stay flat.
+ */
 export default function ScoreRing({ score, visible }: Props) {
-  const ref = useRef<THREE.Mesh>(null!);
-  const materialRef = useRef<THREE.MeshBasicMaterial>(null!);
-  const currentArc = useRef(0);
-  const currentColor = useRef(new THREE.Color('#3b82f6'));
+  const greenRef = useRef<THREE.Mesh>(null!);
+  const redRef = useRef<THREE.Mesh>(null!);
+  const groupRef = useRef<THREE.Group>(null!);
+
+  const currentGreenArc = useRef(0);
+  const currentOpacity = useRef(0);
+
+  const RADIUS = 2.3;
+  const TUBE = 0.07;
+  const RADIAL_SEGMENTS = 24;
+  const ARC_SEGMENTS = 128;
+
+  const greenMat = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: '#22c55e',
+        emissive: '#22c55e',
+        emissiveIntensity: 0.6,
+        transparent: true,
+        opacity: 0,
+        roughness: 0.3,
+        metalness: 0.4,
+      }),
+    []
+  );
+
+  const redMat = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: '#ef4444',
+        emissive: '#ef4444',
+        emissiveIntensity: 0.4,
+        transparent: true,
+        opacity: 0,
+        roughness: 0.3,
+        metalness: 0.4,
+      }),
+    []
+  );
 
   useFrame((_, delta) => {
-    if (!ref.current) return;
+    if (!groupRef.current) return;
 
-    const targetArc = visible ? (score / 100) * Math.PI * 2 : 0;
-    currentArc.current += (targetArc - currentArc.current) * delta * 2;
+    // Animate opacity
+    const targetOpacity = visible ? 1.0 : 0;
+    currentOpacity.current += (targetOpacity - currentOpacity.current) * delta * 3;
 
-    // Recreate geometry with current arc
-    const newGeo = new THREE.TorusGeometry(2.2, 0.04, 8, 64, currentArc.current);
-    ref.current.geometry.dispose();
-    ref.current.geometry = newGeo;
+    // Animate green arc
+    const targetGreenArc = visible ? (score / 100) * Math.PI * 2 : 0;
+    currentGreenArc.current += (targetGreenArc - currentGreenArc.current) * delta * 2;
 
-    // Smooth color transition
-    if (materialRef.current) {
-      const targetColor = new THREE.Color(getScoreColor(score));
-      currentColor.current.lerp(targetColor, 0.03);
-      materialRef.current.color.copy(currentColor.current);
+    const greenArc = Math.max(currentGreenArc.current, 0.01);
+    const redArc = Math.max(Math.PI * 2 - greenArc, 0.01);
+
+    // Update green arc
+    if (greenRef.current) {
+      greenRef.current.geometry.dispose();
+      greenRef.current.geometry = new THREE.TorusGeometry(
+        RADIUS, TUBE, RADIAL_SEGMENTS, ARC_SEGMENTS, greenArc
+      );
+      greenMat.opacity = currentOpacity.current;
     }
 
-    ref.current.rotation.z += delta * 0.3;
+    // Update red arc - starts where green ends
+    if (redRef.current) {
+      redRef.current.geometry.dispose();
+      redRef.current.geometry = new THREE.TorusGeometry(
+        RADIUS, TUBE, RADIAL_SEGMENTS, ARC_SEGMENTS, redArc
+      );
+      // The torus arc starts at angle 0 in its local XY plane.
+      // After the mesh rotation [PI/2, 0, 0], the torus local Z-rotation
+      // becomes a rotation in the XZ world plane. So we offset the red arc
+      // by greenArc in the mesh's local Z rotation.
+      redRef.current.rotation.set(Math.PI / 2, 0, greenArc);
+      redMat.opacity = currentOpacity.current * 0.7;
+    }
+
+    // Rotate around Y to keep the ring horizontal (like Saturn's ring spinning)
+    groupRef.current.rotation.y += delta * 0.15;
+
+    // Export state for ParticleField sync
+    ringState.rotationY = groupRef.current.rotation.y;
+    ringState.greenArc = currentGreenArc.current;
+    ringState.score = score;
   });
 
   return (
-    <mesh ref={ref} rotation={[Math.PI / 2, 0, 0]}>
-      <torusGeometry args={[2.2, 0.04, 8, 64, 0.01]} />
-      <meshBasicMaterial ref={materialRef} color="#3b82f6" transparent opacity={0.7} />
-    </mesh>
+    <group ref={groupRef}>
+      {/* Green arc (score portion) */}
+      <mesh ref={greenRef} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[RADIUS, TUBE, RADIAL_SEGMENTS, ARC_SEGMENTS, 0.01]} />
+        <primitive object={greenMat} attach="material" />
+      </mesh>
+
+      {/* Red arc (remaining portion) */}
+      <mesh ref={redRef} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[RADIUS, TUBE, RADIAL_SEGMENTS, ARC_SEGMENTS, 0.01]} />
+        <primitive object={redMat} attach="material" />
+      </mesh>
+    </group>
   );
 }

@@ -24,3 +24,21 @@ test-results/
 # OS
 .DS_Store
 Thumbs.db
+
+# Training artifacts & data (large files)
+training/models/
+training/data/
+training/*.zip
+*.onnx
+*.safetensors
+*.bin
+*.pt
+
+# Personal resume data
+resume/
+
+# Research repos (embedded git repos, large datasets)
+Research/
+
+# Windows reserved names
+nul

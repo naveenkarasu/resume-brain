@@ -1,0 +1,33 @@
+model:
+  name: m3_skills_comparator
+  base: TechWolf/JobBERT-v2
+  projection_dim: 256
+  task: contrastive_learning
+
+data:
+  sources:
+    - esco_sentences
+    - tabiya_synonyms
+    - nesta_clusters
+    - stacklite_cooccurrence
+  num_hard_negatives: 5
+  max_triplets: 500000
+
+training:
+  epochs: 5
+  batch_size: 64
+  learning_rate: 2.0e-5
+  warmup_ratio: 0.1
+  loss: multiple_negatives_ranking
+  optimizer: adamw
+  scheduler: linear
+  fp16: true
+
+evaluation:
+  metric: skill_match_accuracy
+  target: 0.80
+  test_set: esco_synonym_pairs
+
+output:
+  model_dir: training/models/m3_skills_comparator
+  log_dir: training/logs/m3_skills_comparator

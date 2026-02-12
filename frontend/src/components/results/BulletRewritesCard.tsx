@@ -30,7 +30,7 @@ export default function BulletRewritesCard({ rewrites, bulletScores }: Props) {
   if (!hasContent) return null;
 
   return (
-    <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6 space-y-4">
+    <div className="bg-slate-900/80 border border-white/10 rounded-2xl p-4 sm:p-6 space-y-4">
       {/* Bullet Quality Scores */}
       {bulletScores && bulletScores.length > 0 && (
         <div>

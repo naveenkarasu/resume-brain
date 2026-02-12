@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
@@ -12,48 +12,77 @@ interface Keyword {
 interface Props {
   keywords: Keyword[];
   visible: boolean;
+  score: number;
 }
 
 interface KeywordOrbProps extends Keyword {
   baseAngle: number;
   orbitRadius: number;
+  index: number;
 }
+
+// Shared mutable state for ConstellationLines to read positions each frame
+export const keywordPositions: { x: number; y: number; z: number; matched: boolean }[] = [];
 
 /**
  * Single keyword floating OUTSIDE the ring, in the same horizontal plane.
  * Orbits at a slightly larger radius than the ring, synced with ring rotation.
  * Uses Billboard so text always faces the camera and stays readable.
  */
-function KeywordOrb({ text, matched, baseAngle, orbitRadius }: KeywordOrbProps) {
+function KeywordOrb({ text, matched, baseAngle, orbitRadius, index }: KeywordOrbProps) {
   const ref = useRef<THREE.Group>(null!);
+  const scaleRef = useRef(1);
+  const [hovered, setHovered] = useState(false);
 
-  useFrame(() => {
+  const onOver = useCallback(() => {
+    setHovered(true);
+    document.body.style.cursor = 'pointer';
+  }, []);
+  const onOut = useCallback(() => {
+    setHovered(false);
+    document.body.style.cursor = 'auto';
+  }, []);
+
+  useFrame((_, delta) => {
     if (!ref.current) return;
 
-    // Place keyword at same world angle as ring torus at this baseAngle
-    // Ring torus angle α → world angle (α - rotationY)
     const worldAngle = baseAngle - ringState.rotationY;
-
-    // XZ plane — same horizontal level as the ring
     ref.current.position.x = Math.cos(worldAngle) * orbitRadius;
     ref.current.position.z = Math.sin(worldAngle) * orbitRadius;
-    ref.current.position.y = 0; // Parallel to ring plane
+    ref.current.position.y = 0;
+
+    // Smooth scale on hover
+    const target = hovered ? 1.6 : 1;
+    scaleRef.current += (target - scaleRef.current) * Math.min(delta * 10, 1);
+    ref.current.scale.setScalar(scaleRef.current);
+
+    keywordPositions[index] = {
+      x: ref.current.position.x,
+      y: ref.current.position.y,
+      z: ref.current.position.z,
+      matched,
+    };
   });
 
   const color = matched ? '#22c55e' : '#ef4444';
+  const emissiveIntensity = hovered ? 1.5 : 0.8;
 
   return (
     <group ref={ref}>
-      {/* Small glowing dot */}
+      {/* Visible glowing dot */}
       <mesh>
         <sphereGeometry args={[0.05, 12, 12]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={0.8}
+          emissiveIntensity={emissiveIntensity}
         />
       </mesh>
-      {/* Keyword label — Billboard keeps it always facing the camera */}
+      {/* Larger invisible hit area for easier hover */}
+      <mesh visible={false} onPointerOver={onOver} onPointerOut={onOut}>
+        <sphereGeometry args={[0.2, 8, 8]} />
+        <meshBasicMaterial />
+      </mesh>
       <Billboard follow lockX={false} lockY={false} lockZ={false}>
         <Text
           position={[0, 0.18, 0]}
@@ -79,7 +108,7 @@ function KeywordOrb({ text, matched, baseAngle, orbitRadius }: KeywordOrbProps) 
  * - All orbit at a larger radius so they don't overlap with the ring
  * - Billboard ensures text is always readable from any angle
  */
-export default function ParticleField({ keywords, visible }: Props) {
+export default function ParticleField({ keywords, visible, score }: Props) {
   const { matchedKeywords, missingKeywords } = useMemo(() => {
     const matched = keywords.filter((k) => k.matched).slice(0, 10);
     const missing = keywords.filter((k) => !k.matched).slice(0, 10);
@@ -88,7 +117,6 @@ export default function ParticleField({ keywords, visible }: Props) {
 
   const keywordAngles = useMemo(() => {
     const angles: { text: string; matched: boolean; baseAngle: number; orbitRadius: number }[] = [];
-    const score = ringState.score || 74;
     const greenArc = (score / 100) * Math.PI * 2;
     const redArc = Math.PI * 2 - greenArc;
 
@@ -131,19 +159,25 @@ export default function ParticleField({ keywords, visible }: Props) {
     }
 
     return angles;
-  }, [matchedKeywords, missingKeywords]);
+  }, [matchedKeywords, missingKeywords, score]);
 
-  if (!visible || keywordAngles.length === 0) return null;
+  if (!visible || keywordAngles.length === 0) {
+    keywordPositions.length = 0;
+    return null;
+  }
+
+  keywordPositions.length = keywordAngles.length;
 
   return (
     <group>
-      {keywordAngles.map((kw) => (
+      {keywordAngles.map((kw, i) => (
         <KeywordOrb
           key={kw.text}
           text={kw.text}
           matched={kw.matched}
           baseAngle={kw.baseAngle}
           orbitRadius={kw.orbitRadius}
+          index={i}
         />
       ))}
     </group>

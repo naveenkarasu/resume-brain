@@ -1,0 +1,21 @@
+{
+  "id": "thinkkun/kaggle-train-m3",
+  "id_no": 109113155,
+  "title": "kaggle_train_m3",
+  "code_file": "kaggle-train-m3.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "keywords": [],
+  "dataset_sources": [
+    "thinkkun/m3-data"
+  ],
+  "kernel_sources": [],
+  "competition_sources": [],
+  "model_sources": [],
+  "docker_image": "gcr.io/kaggle-private-byod/python@sha256:58f63ed194fa7d5c55181f1e8ec0be141e9211efa23bc7501c1c865f7e00057d",
+  "machine_shape": "Gpu"
+}

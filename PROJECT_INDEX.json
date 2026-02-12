@@ -1,0 +1,140 @@
+{
+  "project_name": "resume-brain",
+  "generated": "2026-02-09",
+  "description": "AI-powered resume-JD matching analyzer with 3D brain visualization and 6-model ML pipeline",
+  "tech_stack": {
+    "backend": ["Python 3.12", "FastAPI 0.115", "Google Gemini 2.5 Flash", "scikit-learn", "sentence-transformers", "PyTorch", "LightGBM", "pdfplumber"],
+    "frontend": ["React 19", "TypeScript 5.9", "Vite 7", "Three.js 0.182", "@react-three/fiber", "Tailwind CSS 4", "Zustand 5"],
+    "deploy": ["Docker Compose", "GitHub Actions", "GitHub Pages"]
+  },
+  "entry_points": {
+    "backend_api": "backend/main.py",
+    "frontend": "frontend/src/main.tsx",
+    "training": "training/scripts/train_m1.py through train_m6.py",
+    "evaluation": "training/scripts/evaluate_pipeline.py",
+    "tests": "backend/tests/"
+  },
+  "api_endpoints": [
+    {"method": "GET", "path": "/health", "description": "Health check + Gemini status"},
+    {"method": "POST", "path": "/analyze", "description": "Upload PDF + job description (multipart)"},
+    {"method": "POST", "path": "/analyze/quick", "description": "Text-only analysis (JSON body)"}
+  ],
+  "modules": {
+    "backend": {
+      "api": {
+        "path": "backend/api/",
+        "files": ["router.py", "dependencies.py"],
+        "purpose": "FastAPI route definitions and DI"
+      },
+      "models": {
+        "path": "backend/models/",
+        "files": ["requests.py", "responses.py"],
+        "purpose": "Pydantic request/response schemas"
+      },
+      "schemas": {
+        "path": "backend/models/schemas/",
+        "files": ["jd_extracted.py", "resume_extracted.py", "skills_comparison.py", "exp_edu_comparison.py", "judge_result.py", "verdict_result.py"],
+        "purpose": "6-model inter-model Pydantic contracts"
+      },
+      "services_legacy": {
+        "path": "backend/services/",
+        "files": ["resume_analyzer.py", "gemini_client.py", "similarity.py", "keyword_extractor.py", "skill_extractor.py", "resume_ner.py", "section_parser.py", "pdf_parser.py", "prompt_builder.py"],
+        "purpose": "Legacy hybrid NLP pipeline services"
+      },
+      "services_pipeline": {
+        "path": "backend/services/pipeline/",
+        "files": ["base.py", "model_registry.py", "orchestrator.py", "m1_jd_extractor.py", "m2_resume_extractor.py", "m3_skills_comparator.py", "m4_exp_edu_comparator.py", "m5_judge.py", "m6_verdict.py"],
+        "purpose": "6-model v2 pipeline with rule-based fallbacks"
+      }
+    },
+    "frontend": {
+      "api": {
+        "path": "frontend/src/api/",
+        "files": ["client.ts", "types.ts"],
+        "purpose": "HTTP API client and TypeScript interfaces"
+      },
+      "store": {
+        "path": "frontend/src/store/",
+        "files": ["analysisStore.ts"],
+        "purpose": "Zustand state management (phases: idle/loading/results)"
+      },
+      "components": {
+        "layout": {"path": "frontend/src/components/layout/", "files": ["Header.tsx", "Footer.tsx"]},
+        "upload": {"path": "frontend/src/components/upload/", "files": ["ResumeUploader.tsx", "JobDescriptionInput.tsx", "AnalyzeButton.tsx"]},
+        "results": {"path": "frontend/src/components/results/", "files": ["MatchScoreCard.tsx", "MissingKeywordsCard.tsx", "BulletRewritesCard.tsx", "ATSVersionCard.tsx"]},
+        "three": {"path": "frontend/src/components/three/", "files": ["BrainScene.tsx", "BrainMesh.tsx", "ScoreRing.tsx", "NeuralConnections.tsx", "ParticleField.tsx", "BackgroundParticles.tsx"]}
+      }
+    },
+    "training": {
+      "scripts": {
+        "path": "training/scripts/",
+        "files": ["train_m1.py", "train_m2.py", "train_m3.py", "train_m4.py", "train_m5.py", "train_m6.py", "evaluate_pipeline.py"],
+        "purpose": "Training entry points for 6 models"
+      },
+      "data_prep": {
+        "path": "training/data_prep/",
+        "files": ["m1_data.py", "m2_data.py", "m3_data.py", "m4_data.py", "m5_data.py", "m6_data.py"],
+        "purpose": "Dataset preprocessing for each model"
+      },
+      "configs": {
+        "path": "training/configs/",
+        "files": ["m1_jd_extractor.yaml", "m2_resume_extractor.yaml", "m3_skills_comparator.yaml", "m4_exp_edu_comparator.yaml", "m5_judge.yaml", "m6_verdict.yaml"],
+        "purpose": "YAML training hyperparameters"
+      },
+      "utils": {
+        "path": "training/utils/",
+        "files": ["metrics.py", "ner_utils.py", "taxonomy.py"],
+        "purpose": "Shared training utilities"
+      }
+    }
+  },
+  "configuration": {
+    "backend_settings": {
+      "file": "backend/config.py",
+      "env_vars": {
+        "GEMINI_API_KEY": {"required": false, "description": "Google Gemini API key"},
+        "PIPELINE_MODE": {"required": false, "default": "legacy", "values": ["legacy", "v2"]},
+        "PIPELINE_V2_STRICT": {"required": false, "default": false, "description": "Disable fallback to legacy"},
+        "PIPELINE_MODEL_DIR": {"required": false, "default": "training/models"},
+        "MAX_UPLOAD_SIZE_MB": {"required": false, "default": 5},
+        "CORS_ORIGINS": {"required": false, "default": ["http://localhost:5173", "http://localhost:3000"]}
+      }
+    },
+    "frontend_config": "frontend/vite.config.ts",
+    "docker_compose": "docker-compose.yml",
+    "ci": [".github/workflows/ci.yml", ".github/workflows/deploy-pages.yml"]
+  },
+  "pipeline_models": [
+    {"id": "M1", "name": "JD Extractor", "base": "bert-base-cased", "task": "NER (9 entity types)", "gpu": true, "train_time": "2-3h"},
+    {"id": "M2", "name": "Resume Extractor", "base": "yashpwr/resume-ner-bert-v2", "task": "NER (14 entity types)", "gpu": true, "train_time": "3-4h"},
+    {"id": "M3", "name": "Skills Comparator", "base": "TechWolf/JobBERT-v2", "task": "Contrastive embeddings", "gpu": true, "train_time": "1-2h"},
+    {"id": "M4", "name": "Exp/Edu Comparator", "base": "LightGBM", "task": "14 features -> 4 scores", "gpu": false, "train_time": "10min"},
+    {"id": "M5", "name": "Judge", "base": "LightGBM", "task": "13 features -> overall score", "gpu": false, "train_time": "10min"},
+    {"id": "M6", "name": "Verdict", "base": "Templates", "task": "Rule-based generation", "gpu": false, "train_time": "0 (no training)"}
+  ],
+  "training_data": {
+    "total_size": "1.6 GB",
+    "total_datasets": 26,
+    "location": "training/data/"
+  },
+  "tests": {
+    "total": 124,
+    "unit_legacy": 70,
+    "unit_pipeline": 54,
+    "evaluation_tests": ["test_real_resumes_eval.py", "test_kaggle_category_eval.py", "test_vacancy_resume_eval.py"],
+    "run_command": "cd backend && python -m pytest tests/ -v"
+  },
+  "documentation": {
+    "README.md": "Project overview and quick start",
+    "EXPLAIN.md": "Full training guide (Windows + GPU)",
+    "plan.md": "6-model architecture specification",
+    "CLAUDE.md": "AI assistant project context"
+  },
+  "current_state": {
+    "infrastructure": "complete",
+    "tests_passing": 124,
+    "models_trained": false,
+    "legacy_pipeline": "operational",
+    "v2_pipeline": "functional with fallbacks, no trained models"
+  }
+}

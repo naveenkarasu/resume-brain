@@ -1,0 +1,35 @@
+model:
+  name: m6_verdict
+  # Tier 1: template-based (no model training needed)
+  # Tier 2 (future): fine-tuned seq2seq
+  tier: 1
+  tier2_base: google/flan-t5-base  # 250M params, for future use
+
+data:
+  # Tier 2 training data (not used in Tier 1)
+  sources:
+    - mikepfunk_critiques    # 22.8K resume critique pairs
+    - grammarly_coedit       # 70K text editing pairs
+    - iterater               # 4K sentence revision pairs
+  max_length: 512
+  target_max_length: 256
+
+training:
+  # Tier 2 training config (for future use)
+  epochs: 5
+  batch_size: 8
+  learning_rate: 5.0e-5
+  warmup_ratio: 0.1
+  fp16: true
+
+evaluation:
+  metrics:
+    - bleu
+    - rouge_l
+  targets:
+    bleu: 0.15
+    rouge_l: 0.30
+
+output:
+  model_dir: training/models/m6_verdict
+  log_dir: training/logs/m6_verdict

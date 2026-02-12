@@ -1,6 +1,10 @@
 """Orchestrator: multi-layer hybrid analysis pipeline.
 
-Pipeline:
+Supports two modes (controlled by config.pipeline_mode):
+- "legacy" (default): 7-layer hybrid pipeline with optional Gemini LLM
+- "v2": 6-model specialized ML pipeline
+
+Pipeline (legacy):
 1. Section parsing (structural analysis)
 2. TF-IDF + SBERT similarity (lexical + semantic scoring)
 3. Keyword extraction from JD (TF-IDF + dictionary combined)
@@ -12,6 +16,7 @@ Pipeline:
 
 import logging
 
+from config import settings
 from models.responses import (
     AnalysisResponse,
     BulletRewrite,
@@ -60,7 +65,30 @@ def _compute_local_overall(
 
 
 async def analyze(resume_text: str, job_description: str) -> AnalysisResponse:
-    """Run full hybrid analysis pipeline."""
+    """Run analysis pipeline based on configured pipeline_mode.
+
+    - "legacy": original 7-layer hybrid pipeline (default)
+    - "v2": 6-model specialized ML pipeline
+    """
+    if settings.pipeline_mode == "v2":
+        try:
+            return await _analyze_v2(resume_text, job_description)
+        except Exception as e:
+            if settings.pipeline_v2_strict:
+                raise
+            logger.warning("Pipeline v2 failed, falling back to legacy: %s", e)
+
+    return await _analyze_legacy(resume_text, job_description)
+
+
+async def _analyze_v2(resume_text: str, job_description: str) -> AnalysisResponse:
+    """Run the 6-model specialized pipeline."""
+    from services.pipeline.orchestrator import analyze_v2
+    return await analyze_v2(resume_text, job_description)
+
+
+async def _analyze_legacy(resume_text: str, job_description: str) -> AnalysisResponse:
+    """Run the original 7-layer hybrid analysis pipeline."""
     bullets = pdf_parser.extract_bullets(resume_text)
 
     # --- Layer 1: Section parsing ---

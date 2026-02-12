@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const COUNT = 600;
+const COUNT = 400;
 
 function createParticleGeometry() {
   const geo = new THREE.BufferGeometry();
@@ -36,7 +36,7 @@ export default function BackgroundParticles() {
         color="#4488ff"
         size={0.03}
         transparent
-        opacity={0.4}
+        opacity={0.25}
         sizeAttenuation
         depthWrite={false}
       />

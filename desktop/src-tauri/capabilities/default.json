@@ -1,0 +1,20 @@
+{
+  "identifier": "default",
+  "description": "Default capabilities for Resume Brain",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "shell:allow-open",
+    "shell:allow-execute",
+    "shell:allow-spawn",
+    {
+      "identifier": "shell:allow-sidecar",
+      "allow": [
+        {
+          "name": "binaries/resume-brain",
+          "sidecar": true
+        }
+      ]
+    }
+  ]
+}

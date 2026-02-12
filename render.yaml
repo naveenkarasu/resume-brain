@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: resume-brain
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: "https://naveenkarasu.github.io"

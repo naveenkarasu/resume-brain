@@ -1,4 +1,6 @@
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from config import settings
 from models.requests import QuickAnalyzeRequest
@@ -6,6 +8,7 @@ from models.responses import AnalysisResponse
 from services import pdf_parser, resume_analyzer
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.get("/health")
@@ -17,7 +20,9 @@ async def health():
 
 
 @router.post("/analyze", response_model=AnalysisResponse)
+@limiter.limit("10/minute")
 async def analyze(
+    request: Request,
     resume_file: UploadFile = File(...),
     job_description: str = Form(...),
 ):
@@ -50,5 +55,6 @@ async def analyze(
 
 
 @router.post("/analyze/quick", response_model=AnalysisResponse)
-async def analyze_quick(request: QuickAnalyzeRequest):
-    return await resume_analyzer.analyze(request.resume_text, request.job_description)
+@limiter.limit("10/minute")
+async def analyze_quick(request: Request, body: QuickAnalyzeRequest):
+    return await resume_analyzer.analyze(body.resume_text, body.job_description)

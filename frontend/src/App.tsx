@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import BrainScene from './components/three/BrainScene';
@@ -11,35 +12,94 @@ import ATSVersionCard from './components/results/ATSVersionCard';
 import { useAnalysisStore } from './store/analysisStore';
 
 function App() {
-  const { phase, result, isDemo } = useAnalysisStore();
+  const { phase, result, isDemo, loadingStage } = useAnalysisStore();
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Drive content panel opacity + pointer-events from page scroll position
+  useEffect(() => {
+    const update = () => {
+      const el = contentRef.current;
+      if (!el) return;
+      const progress = Math.min(window.scrollY / (window.innerHeight * 0.3), 1);
+      el.style.opacity = String(progress);
+      el.style.pointerEvents = progress > 0.8 ? 'auto' : 'none';
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+
+  // Auto-scroll on phase transitions
+  useEffect(() => {
+    if (phase === 'loading' || phase === 'results') {
+      window.scrollTo({ top: window.innerHeight * 0.3, behavior: 'smooth' });
+    }
+    if (phase === 'idle') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (contentRef.current) contentRef.current.scrollTop = 0;
+    }
+  }, [phase]);
+
+  // Allow scrolling back to full globe view from content panel
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const handleWheel = (e: WheelEvent) => {
+      if (el.scrollTop <= 0 && e.deltaY < 0) {
+        window.scrollBy(0, e.deltaY);
+      }
+    };
+    el.addEventListener('wheel', handleWheel, { passive: true });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="relative">
+      {/* ── Background layers (fixed, behind everything) ── */}
+      <BrainScene />
+      <div className="orb orb-1" />
+      <div className="orb orb-2" />
+      <div className="orb orb-3" />
+      <div className="dot-grid" />
+      <div className="noise-overlay" />
+
       <Header />
 
-      <main className="flex-1 pt-20">
-        {/* Brain Visualization */}
-        <section className="relative">
-          <BrainScene />
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            {phase === 'loading' && (
-              <div className="text-center">
-                <div className="text-blue-400 text-lg font-medium animate-pulse">
-                  Analyzing your resume...
-                </div>
+      {/* Scroll driver — provides page-scroll distance for the globe transition */}
+      <div style={{ height: '130vh' }} />
+
+      {/* ── Fixed content panel — confined to bottom 50vh, never covers the globe ── */}
+      <div
+        ref={contentRef}
+        className="fixed inset-x-0 bottom-0 z-10 overflow-y-auto"
+        style={{ top: '50vh', opacity: 0, pointerEvents: 'none' }}
+      >
+        <div className="glow-divider" />
+
+        {/* Loading indicator */}
+        {phase === 'loading' && (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center space-y-3">
+              <div className="text-blue-400 text-base sm:text-lg font-medium animate-pulse">
+                {loadingStage || 'Analyzing your resume...'}
               </div>
-            )}
+              <div className="flex justify-center gap-1.5">
+                <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0ms]" />
+                <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:150ms]" />
+                <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:300ms]" />
+              </div>
+            </div>
           </div>
-        </section>
+        )}
 
         {/* Upload Section */}
-        {phase !== 'results' && (
-          <section className="max-w-2xl mx-auto px-6 pb-12 space-y-6">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
+        {phase !== 'results' && phase !== 'loading' && (
+          <section className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-4 sm:space-y-6">
+            <div className="text-center mb-6 sm:mb-8">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3">
                 AI Resume Analyzer
               </h1>
-              <p className="text-gray-400">
+              <p className="text-gray-400 text-sm sm:text-base px-2">
                 Upload your resume and paste a job description to get an AI-powered match analysis
               </p>
             </div>
@@ -51,52 +111,60 @@ function App() {
 
         {/* Results Section */}
         {phase === 'results' && result && (
-          <section className="max-w-4xl mx-auto px-6 pb-12 space-y-6">
+          <section className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-4 sm:space-y-6">
             {isDemo && (
-              <div className="text-center text-sm text-amber-400 bg-amber-500/10 rounded-lg py-2">
+              <div className="text-center text-sm text-amber-400 bg-amber-500/10 rounded-lg py-2 animate-fade-in">
                 Demo mode - showing sample analysis results
               </div>
             )}
             {result.degraded && (
-              <div className="text-center text-sm text-amber-400 bg-amber-500/10 rounded-lg py-2">
+              <div className="text-center text-sm text-amber-400 bg-amber-500/10 rounded-lg py-2 animate-fade-in">
                 Partial results - AI service unavailable, using local keyword matching
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <MatchScoreCard
-                overallScore={result.overall_score}
-                breakdown={result.score_breakdown}
-                summary={result.summary}
-                tfidfScore={result.tfidf_score}
-                semanticScore={result.semantic_score}
-                scoringMethod={result.scoring_method}
-                sectionAnalysis={result.section_analysis}
-                experienceYears={result.experience_years}
-                educationLevel={result.education_level}
-              />
-              <MissingKeywordsCard
-                matched={result.matched_keywords}
-                missing={result.missing_keywords}
-                keywordDensity={result.keyword_density}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div className="animate-reveal [animation-delay:0ms]">
+                <MatchScoreCard
+                  overallScore={result.overall_score}
+                  breakdown={result.score_breakdown}
+                  summary={result.summary}
+                  tfidfScore={result.tfidf_score}
+                  semanticScore={result.semantic_score}
+                  scoringMethod={result.scoring_method}
+                  sectionAnalysis={result.section_analysis}
+                  experienceYears={result.experience_years}
+                  educationLevel={result.education_level}
+                />
+              </div>
+              <div className="animate-reveal [animation-delay:150ms]">
+                <MissingKeywordsCard
+                  matched={result.matched_keywords}
+                  missing={result.missing_keywords}
+                  keywordDensity={result.keyword_density}
+                />
+              </div>
+            </div>
+
+            <div className="animate-reveal [animation-delay:300ms]">
+              <BulletRewritesCard
+                rewrites={result.bullet_rewrites}
+                bulletScores={result.bullet_scores}
               />
             </div>
 
-            <BulletRewritesCard
-              rewrites={result.bullet_rewrites}
-              bulletScores={result.bullet_scores}
-            />
-
-            <ATSVersionCard
-              atsResume={result.ats_optimized_resume}
-              strengths={result.strengths}
-              weaknesses={result.weaknesses}
-            />
+            <div className="animate-reveal [animation-delay:450ms]">
+              <ATSVersionCard
+                atsResume={result.ats_optimized_resume}
+                strengths={result.strengths}
+                weaknesses={result.weaknesses}
+              />
+            </div>
           </section>
         )}
-      </main>
 
-      <Footer />
+        <Footer />
+      </div>
     </div>
   );
 }

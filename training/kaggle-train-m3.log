@@ -1,0 +1,159 @@
+[{"stream_name":"stderr","time":7.676194399,"data":"0.00s - Debugger warning: It seems that frozen modules are being used, which may\n"}
+,{"stream_name":"stderr","time":7.676250203,"data":"0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off\n"}
+,{"stream_name":"stderr","time":7.676254356,"data":"0.00s - to python to disable frozen modules.\n"}
+,{"stream_name":"stderr","time":7.676257017,"data":"0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.\n"}
+,{"stream_name":"stderr","time":8.304026721,"data":"0.00s - Debugger warning: It seems that frozen modules are being used, which may\n"}
+,{"stream_name":"stderr","time":8.304059319,"data":"0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off\n"}
+,{"stream_name":"stderr","time":8.304067215,"data":"0.00s - to python to disable frozen modules.\n"}
+,{"stream_name":"stderr","time":8.304072381,"data":"0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.\n"}
+,{"stream_name":"stdout","time":17.39397004,"data":"GPU available: True\n"}
+,{"stream_name":"stdout","time":17.39403878,"data":"GPU: Tesla P100-PCIE-16GB\n"}
+,{"stream_name":"stdout","time":17.394047798,"data":"Memory: 17.1 GB\n"}
+,{"stream_name":"stdout","time":17.576197342,"data":"Available datasets in /kaggle/input/:\n"}
+,{"stream_name":"stdout","time":17.576243024,"data":"  /kaggle/input/datasets/\n"}
+,{"stream_name":"stdout","time":17.576251167,"data":"\n"}
+,{"stream_name":"stdout","time":17.576257146,"data":"Data root found: /kaggle/input/datasets/thinkkun/m3-data\n"}
+,{"stream_name":"stdout","time":17.576263093,"data":"Contents:\n"}
+,{"stream_name":"stdout","time":17.576268049,"data":"  job_skill_set/ (1 files)\n"}
+,{"stream_name":"stdout","time":17.854569158,"data":"  mind_tech_ontology/ (33 files)\n"}
+,{"stream_name":"stdout","time":18.46409079,"data":"  nesta_skills_taxonomy/ (127 files)\n"}
+,{"stream_name":"stdout","time":18.46413638,"data":"  related_job_skills/ (1 files)\n"}
+,{"stream_name":"stdout","time":18.464143211,"data":"  stacklite/ (8 files)\n"}
+,{"stream_name":"stdout","time":18.464148641,"data":"  tabiya_esco/ (11 files)\n"}
+,{"stream_name":"stdout","time":18.464153856,"data":"  techwolf_esco_sentences/ (1 files)\n"}
+,{"stream_name":"stdout","time":19.458929675,"data":"Using DATA_DIR: /kaggle/input/datasets/thinkkun/m3-data\n"}
+,{"stream_name":"stdout","time":19.458971835,"data":"\n"}
+,{"stream_name":"stdout","time":19.458976478,"data":"============================================================\n"}
+,{"stream_name":"stdout","time":19.458980436,"data":"Loading all skill data sources...\n"}
+,{"stream_name":"stdout","time":19.458985157,"data":"============================================================\n"}
+,{"stream_name":"stdout","time":19.458991739,"data":"\n"}
+,{"stream_name":"stderr","time":24.380824889,"data":"2026-02-10 20:52:22,233 INFO TechWolf ESCO: loaded 138250 skill-sentence pairs.\n"}
+,{"stream_name":"stderr","time":24.380878752,"data":"\n"}
+,{"stream_name":"stderr","time":24.380888334,"data":"2026-02-10 20:52:22,233 INFO TechWolf ESCO: loaded 138250 skill-sentence pairs.\n"}
+,{"stream_name":"stderr","time":25.172389064,"data":"2026-02-10 20:52:23,026 INFO Tabiya ESCO: loaded 13896 skills with synonyms.\n"}
+,{"stream_name":"stderr","time":25.172423106,"data":"\n"}
+,{"stream_name":"stderr","time":25.172430285,"data":"2026-02-10 20:52:23,026 INFO Tabiya ESCO: loaded 13896 skills with synonyms.\n"}
+,{"stream_name":"stderr","time":25.213032515,"data":"2026-02-10 20:52:23,068 INFO Loading Nesta clusters from /kaggle/input/datasets/thinkkun/m3-data/nesta_skills_taxonomy\n"}
+,{"stream_name":"stderr","time":25.213082869,"data":"\n"}
+,{"stream_name":"stderr","time":25.213089267,"data":"2026-02-10 20:52:23,068 INFO Loading Nesta clusters from /kaggle/input/datasets/thinkkun/m3-data/nesta_skills_taxonomy\n"}
+,{"stream_name":"stderr","time":25.225030168,"data":"2026-02-10 20:52:23,081 INFO Nesta: loaded clusters from 2022.01.21_hierarchy_structure_named.json\n"}
+,{"stream_name":"stderr","time":25.225066727,"data":"\n"}
+,{"stream_name":"stderr","time":25.22507203,"data":"2026-02-10 20:52:23,081 INFO Nesta: loaded clusters from 2022.01.21_hierarchy_structure_named.json\n"}
+,{"stream_name":"stderr","time":25.225976432,"data":"2026-02-10 20:52:23,081 INFO Nesta: 90 clusters, 6685 total skills.\n"}
+,{"stream_name":"stderr","time":25.22600493,"data":"\n"}
+,{"stream_name":"stderr","time":25.226010334,"data":"2026-02-10 20:52:23,081 INFO Nesta: 90 clusters, 6685 total skills.\n"}
+,{"stream_name":"stderr","time":25.227211143,"data":"2026-02-10 20:52:23,083 WARNING StackLite tags not found -- skipping.\n"}
+,{"stream_name":"stderr","time":25.227236338,"data":"\n"}
+,{"stream_name":"stderr","time":25.227241651,"data":"2026-02-10 20:52:23,083 WARNING StackLite tags not found -- skipping.\n"}
+,{"stream_name":"stderr","time":27.056210698,"data":"2026-02-10 20:52:24,911 INFO Related Skills: loaded 28934 skills with 289069 total relations.\n"}
+,{"stream_name":"stderr","time":27.056246786,"data":"\n"}
+,{"stream_name":"stderr","time":27.056251628,"data":"2026-02-10 20:52:24,911 INFO Related Skills: loaded 28934 skills with 289069 total relations.\n"}
+,{"stream_name":"stderr","time":27.278204022,"data":"2026-02-10 20:52:25,133 INFO Job Skill Sets: loaded 1167 job postings with skill lists.\n"}
+,{"stream_name":"stderr","time":27.278247196,"data":"\n"}
+,{"stream_name":"stderr","time":27.278252737,"data":"2026-02-10 20:52:25,133 INFO Job Skill Sets: loaded 1167 job postings with skill lists.\n"}
+,{"stream_name":"stderr","time":27.330060455,"data":"2026-02-10 20:52:25,183 INFO Tech Ontology: loaded 3333 skills.\n"}
+,{"stream_name":"stderr","time":27.330113124,"data":"\n"}
+,{"stream_name":"stderr","time":27.330119239,"data":"2026-02-10 20:52:25,183 INFO Tech Ontology: loaded 3333 skills.\n"}
+,{"stream_name":"stdout","time":27.331087987,"data":"\n"}
+,{"stream_name":"stdout","time":27.331116679,"data":"============================================================\n"}
+,{"stream_name":"stdout","time":27.331121959,"data":"Data loading summary:\n"}
+,{"stream_name":"stdout","time":27.331125506,"data":"  ESCO sentence pairs:   138,250\n"}
+,{"stream_name":"stdout","time":27.331129368,"data":"  Tabiya synonyms:        13,896\n"}
+,{"stream_name":"stdout","time":27.331132882,"data":"  Nesta clusters:             90\n"}
+,{"stream_name":"stdout","time":27.331136141,"data":"  StackLite co-occur:          0\n"}
+,{"stream_name":"stdout","time":27.331139478,"data":"  Related skills:         28,934\n"}
+,{"stream_name":"stdout","time":27.331143225,"data":"  Job skill sets:          1,167\n"}
+,{"stream_name":"stdout","time":27.331147122,"data":"  Tech ontology:           3,333\n"}
+,{"stream_name":"stdout","time":27.33115061,"data":"============================================================\n"}
+,{"stream_name":"stdout","time":27.66632926,"data":"Global skill vocabulary: 148,843 unique skills\n"}
+,{"stream_name":"stdout","time":27.934512423,"data":"  Synonym-based: +85,294 triplets\n"}
+,{"stream_name":"stdout","time":27.934544555,"data":"  Cluster-based: +13,107 triplets\n"}
+,{"stream_name":"stdout","time":28.171340815,"data":"  ESCO sentence-based: +82,950 triplets\n"}
+,{"stream_name":"stdout","time":28.171396583,"data":"  Related skills: +144,610 triplets\n"}
+,{"stream_name":"stdout","time":28.171401549,"data":"  Job co-occurrence: +3,501 triplets\n"}
+,{"stream_name":"stdout","time":28.171405013,"data":"  Tech ontology: +8,840 triplets\n"}
+,{"stream_name":"stdout","time":28.512042028,"data":"\n"}
+,{"stream_name":"stdout","time":28.5120763,"data":"Total triplets (before hard negatives): 338,302\n"}
+,{"stream_name":"stdout","time":28.697934899,"data":"Hard negatives: replaced 45,426 / 338,302 negatives\n"}
+,{"stream_name":"stdout","time":28.697969347,"data":"\n"}
+,{"stream_name":"stdout","time":28.697975064,"data":"Final triplet count: 338,302\n"}
+,{"stream_name":"stdout","time":28.697979292,"data":"\n"}
+,{"stream_name":"stdout","time":28.697983148,"data":"Sample triplets:\n"}
+,{"stream_name":"stdout","time":28.697986734,"data":"  anchor: business law\n"}
+,{"stream_name":"stdout","time":28.697990105,"data":"  positive: business laws\n"}
+,{"stream_name":"stdout","time":28.697993854,"data":"  negative: manage websites\n"}
+,{"stream_name":"stdout","time":28.697997389,"data":"\n"}
+,{"stream_name":"stdout","time":28.698002352,"data":"  anchor: maintain edged hand tools\n"}
+,{"stream_name":"stdout","time":28.698005872,"data":"  positive: maintaining edged hand tools\n"}
+,{"stream_name":"stdout","time":28.698011017,"data":"  negative: oversee recycling program budget\n"}
+,{"stream_name":"stdout","time":28.698014546,"data":"\n"}
+,{"stream_name":"stdout","time":28.698018355,"data":"  anchor: communicate during show\n"}
+,{"stream_name":"stdout","time":28.698022506,"data":"  positive: communicate effectively during a live show\n"}
+,{"stream_name":"stdout","time":28.698026242,"data":"  negative: music therapy\n"}
+,{"stream_name":"stdout","time":28.698030145,"data":"\n"}
+,{"stream_name":"stdout","time":28.698033827,"data":"  anchor: frx report designer\n"}
+,{"stream_name":"stdout","time":28.698038739,"data":"  positive: management reporter\n"}
+,{"stream_name":"stdout","time":28.698042569,"data":"  negative: great plains software\n"}
+,{"stream_name":"stdout","time":28.698046826,"data":"\n"}
+,{"stream_name":"stdout","time":28.698050011,"data":"  anchor: looking for individuals who are well-versed in Jewish law an\n"}
+,{"stream_name":"stdout","time":28.698053344,"data":"  positive: looking for a qualified rabbi to assist in ecclesiastical ma\n"}
+,{"stream_name":"stdout","time":28.698056961,"data":"  negative: seeking candidates with prior experience picking orders of a\n"}
+,{"stream_name":"stdout","time":28.698060174,"data":"\n"}
+,{"stream_name":"stderr","time":41.087088616,"data":"WARNING: All log messages before absl::InitializeLog() is called are written to STDERR\n"}
+,{"stream_name":"stderr","time":41.087128992,"data":"E0000 00:00:1770756758.368644      25 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n"}
+,{"stream_name":"stderr","time":41.087876144,"data":"E0000 00:00:1770756758.422798      25 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n"}
+,{"stream_name":"stderr","time":41.087902611,"data":"W0000 00:00:1770756758.896570      25 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.\n"}
+,{"stream_name":"stderr","time":41.087908972,"data":"W0000 00:00:1770756758.896614      25 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.\n"}
+,{"stream_name":"stderr","time":41.087925397,"data":"W0000 00:00:1770756758.896617      25 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.\n"}
+,{"stream_name":"stderr","time":41.087930354,"data":"W0000 00:00:1770756758.896620      25 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.\n"}
+,{"stream_name":"stderr","time":41.291244132,"data":"WARNING: All log messages before absl::InitializeLog() is called are written to STDERR\n"}
+,{"stream_name":"stderr","time":41.291280123,"data":"E0000 00:00:1770756758.368644      25 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n"}
+,{"stream_name":"stderr","time":41.291286213,"data":"E0000 00:00:1770756758.422798      25 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n"}
+,{"stream_name":"stderr","time":41.291290592,"data":"W0000 00:00:1770756758.896570      25 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.\n"}
+,{"stream_name":"stderr","time":41.291294487,"data":"W0000 00:00:1770756758.896614      25 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.\n"}
+,{"stream_name":"stderr","time":41.29129933,"data":"W0000 00:00:1770756758.896617      25 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.\n"}
+,{"stream_name":"stderr","time":41.291304308,"data":"W0000 00:00:1770756758.896620      25 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.\n"}
+,{"stream_name":"stderr","time":41.291309034,"data":"\n"}
+,{"stream_name":"stderr","time":41.291313089,"data":"WARNING: All log messages before absl::InitializeLog() is called are written to STDERR\n"}
+,{"stream_name":"stderr","time":41.291317698,"data":"E0000 00:00:1770756758.368644      25 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n"}
+,{"stream_name":"stderr","time":41.291322318,"data":"E0000 00:00:1770756758.422798      25 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n"}
+,{"stream_name":"stderr","time":41.291327198,"data":"W0000 00:00:1770756758.896570      25 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.\n"}
+,{"stream_name":"stderr","time":41.291332226,"data":"W0000 00:00:1770756758.896614      25 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.\n"}
+,{"stream_name":"stderr","time":41.291338433,"data":"W0000 00:00:1770756758.896617      25 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.\n"}
+,{"stream_name":"stderr","time":41.291343528,"data":"W0000 00:00:1770756758.896620      25 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.\n"}
+,{"stream_name":"stderr","time":53.188540152,"data":"2026-02-10 20:52:51,043 INFO TensorFlow version 2.19.0 available.\n"}
+,{"stream_name":"stderr","time":53.188584245,"data":"\n"}
+,{"stream_name":"stderr","time":53.188599803,"data":"2026-02-10 20:52:51,043 INFO TensorFlow version 2.19.0 available.\n"}
+,{"stream_name":"stderr","time":53.189752538,"data":"2026-02-10 20:52:51,046 INFO JAX version 0.7.2 available.\n"}
+,{"stream_name":"stderr","time":53.18977867,"data":"\n"}
+,{"stream_name":"stderr","time":53.189783629,"data":"2026-02-10 20:52:51,046 INFO JAX version 0.7.2 available.\n"}
+,{"stream_name":"stderr","time":56.410578096,"data":"2026-02-10 20:52:54,266 INFO Use pytorch device_name: cuda:0\n"}
+,{"stream_name":"stderr","time":56.410614778,"data":"\n"}
+,{"stream_name":"stderr","time":56.410619439,"data":"2026-02-10 20:52:54,266 INFO Use pytorch device_name: cuda:0\n"}
+,{"stream_name":"stderr","time":56.411464654,"data":"2026-02-10 20:52:54,266 INFO Load pretrained SentenceTransformer: TechWolf/JobBERT-v2\n"}
+,{"stream_name":"stderr","time":56.411491618,"data":"\n"}
+,{"stream_name":"stderr","time":56.411496378,"data":"2026-02-10 20:52:54,266 INFO Load pretrained SentenceTransformer: TechWolf/JobBERT-v2\n"}
+,{"stream_name":"stdout","time":56.605352909,"data":"Loading base model: TechWolf/JobBERT-v2\n"}
+,{"stream_name":"stdout","time":65.116562334,"data":"Model loaded. Embedding dim: 1024\n"}
+,{"stream_name":"stdout","time":65.116611924,"data":"Train: 304,471 triplets, Eval: 33,831 triplets\n"}
+,{"stream_name":"stdout","time":66.117381687,"data":"Train dataset: 304,471, Eval dataset: 33,831\n"}
+,{"stream_name":"stdout","time":66.117414919,"data":"\n"}
+,{"stream_name":"stdout","time":66.117419078,"data":"============================================================\n"}
+,{"stream_name":"stdout","time":66.117422268,"data":"Starting contrastive training\n"}
+,{"stream_name":"stdout","time":66.117425284,"data":"  Epochs: 6\n"}
+,{"stream_name":"stdout","time":66.117428316,"data":"  Batch size: 64\n"}
+,{"stream_name":"stdout","time":66.117431269,"data":"  Warmup ratio: 0.1\n"}
+,{"stream_name":"stdout","time":66.117434273,"data":"  Eval every: 2378 steps\n"}
+,{"stream_name":"stdout","time":66.117437379,"data":"  FP16: True\n"}
+,{"stream_name":"stdout","time":66.117440529,"data":"============================================================\n"}
+,{"stream_name":"stdout","time":66.117444725,"data":"\n"}
+,{"stream_name":"stderr","time":67.260451901,"data":"/usr/local/lib/python3.12/dist-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'repr' attribute with value False was provided to the `Field()` function, which has no effect in the context it was used. 'repr' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.\n"}
+,{"stream_name":"stderr","time":67.26048415,"data":"  warnings.warn(\n"}
+,{"stream_name":"stderr","time":67.260491061,"data":"/usr/local/lib/python3.12/dist-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'frozen' attribute with value True was provided to the `Field()` function, which has no effect in the context it was used. 'frozen' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.\n"}
+,{"stream_name":"stderr","time":67.260497019,"data":"  warnings.warn(\n"}
+,{"stream_name":"stderr","time":67.260502163,"data":"\n"}
+,{"stream_name":"stderr","time":67.260507224,"data":"/usr/local/lib/python3.12/dist-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'repr' attribute with value False was provided to the `Field()` function, which has no effect in the context it was used. 'repr' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.\n"}
+,{"stream_name":"stderr","time":67.260523449,"data":"  warnings.warn(\n"}
+,{"stream_name":"stderr","time":67.260528499,"data":"/usr/local/lib/python3.12/dist-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'frozen' attribute with value True was provided to the `Field()` function, which has no effect in the context it was used. 'frozen' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.\n"}
+,{"stream_name":"stderr","time":67.260534786,"data":"  warnings.warn(\n"}
+]

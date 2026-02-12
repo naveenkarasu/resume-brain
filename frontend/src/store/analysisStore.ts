@@ -12,6 +12,7 @@ interface AnalysisState {
   resumeFile: File | null;
   jobDescription: string;
   isDemo: boolean;
+  loadingStage: string;
 
   setResumeFile: (file: File | null) => void;
   setJobDescription: (jd: string) => void;
@@ -28,6 +29,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
   resumeFile: null,
   jobDescription: '',
   isDemo: false,
+  loadingStage: '',
 
   setResumeFile: (file) => set({ resumeFile: file, error: null }),
   setJobDescription: (jd) => set({ jobDescription: jd, error: null }),
@@ -39,14 +41,22 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
       return;
     }
 
-    set({ phase: 'loading', error: null });
+    set({ phase: 'loading', error: null, loadingStage: 'Parsing resume...' });
+    const timers = [
+      setTimeout(() => { if (get().phase === 'loading') set({ loadingStage: 'Extracting keywords...' }); }, 2000),
+      setTimeout(() => { if (get().phase === 'loading') set({ loadingStage: 'Comparing skills...' }); }, 5000),
+      setTimeout(() => { if (get().phase === 'loading') set({ loadingStage: 'Generating results...' }); }, 8000),
+    ];
     try {
       const result = await analyzeResume(resumeFile, jobDescription);
-      set({ phase: 'results', result, isDemo: false });
+      timers.forEach(clearTimeout);
+      set({ phase: 'results', result, isDemo: false, loadingStage: '' });
     } catch (e) {
+      timers.forEach(clearTimeout);
       set({
         phase: 'idle',
         error: e instanceof Error ? e.message : 'Analysis failed',
+        loadingStage: '',
       });
     }
   },
@@ -58,14 +68,22 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
       return;
     }
 
-    set({ phase: 'loading', error: null });
+    set({ phase: 'loading', error: null, loadingStage: 'Parsing resume...' });
+    const timers = [
+      setTimeout(() => { if (get().phase === 'loading') set({ loadingStage: 'Extracting keywords...' }); }, 2000),
+      setTimeout(() => { if (get().phase === 'loading') set({ loadingStage: 'Comparing skills...' }); }, 5000),
+      setTimeout(() => { if (get().phase === 'loading') set({ loadingStage: 'Generating results...' }); }, 8000),
+    ];
     try {
       const result = await analyzeQuick(resumeText, jobDescription);
-      set({ phase: 'results', result, isDemo: false });
+      timers.forEach(clearTimeout);
+      set({ phase: 'results', result, isDemo: false, loadingStage: '' });
     } catch (e) {
+      timers.forEach(clearTimeout);
       set({
         phase: 'idle',
         error: e instanceof Error ? e.message : 'Analysis failed',
+        loadingStage: '',
       });
     }
   },
@@ -82,6 +100,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
       resumeFile: null,
       jobDescription: '',
       isDemo: false,
+      loadingStage: '',
     });
   },
 }));

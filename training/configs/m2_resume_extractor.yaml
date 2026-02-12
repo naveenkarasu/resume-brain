@@ -1,0 +1,41 @@
+model:
+  name: m2_resume_extractor
+  base: yashpwr/resume-ner-bert-v2
+  num_labels: 29  # 14 entity types x 2 (B/I) + O
+  task: token_classification
+
+data:
+  sources:
+    - yashpwr
+    - dataturks
+    - mehyaar
+    - datasetmaster
+    - djinni
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+  max_length: 512
+
+training:
+  epochs: 8
+  batch_size: 16
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  optimizer: adamw
+  scheduler: linear
+  early_stopping_patience: 3
+  early_stopping_metric: eval_f1
+  fp16: true
+  # Freeze lower BERT layers for first 2 epochs to preserve pretrained knowledge
+  freeze_layers: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+  freeze_epochs: 2
+
+evaluation:
+  metric: entity_level_macro_f1
+  target: 0.90
+  regression_check: true  # ensure no regression on original 11 types
+
+output:
+  model_dir: training/models/m2_resume_extractor
+  log_dir: training/logs/m2_resume_extractor

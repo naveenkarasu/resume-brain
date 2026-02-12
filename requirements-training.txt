@@ -1,0 +1,22 @@
+# Training dependencies for GPU machine
+# Install with: pip install -r requirements-training.txt
+
+# Core app dependencies (same as backend/requirements.txt)
+-r backend/requirements.txt
+
+# IMPORTANT: torch must be installed separately with CUDA support:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu121
+# Do NOT use this file's torch entry on GPU - it pulls CPU-only.
+# The line below is only a version pin fallback:
+# torch>=2.0
+
+# Training-specific
+lightgbm>=4.0
+seqeval>=1.2.2
+accelerate>=0.25
+pyyaml>=6.0
+datasets>=4.0.0
+sentence-transformers>=3.3.1
+scikit-learn>=1.5.2
+scipy>=1.12.0
+numpy>=2.0

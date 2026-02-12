@@ -1,0 +1,35 @@
+model:
+  name: m4_exp_edu_comparator
+  type: lightgbm
+  task: regression
+
+data:
+  sources:
+    - jobhop
+    - karrierewege
+    - job_titles
+  features: 14
+  targets:
+    - experience_score
+    - education_score
+    - domain_score
+    - title_score
+
+training:
+  num_estimators: 500
+  learning_rate: 0.05
+  max_depth: 6
+  num_leaves: 31
+  subsample: 0.8
+  colsample_bytree: 0.8
+  early_stopping_rounds: 50
+  metric: rmse
+  verbose: 10
+
+evaluation:
+  metric: spearman
+  target: 0.60
+
+output:
+  model_dir: training/models/m4_exp_edu_comparator
+  log_dir: training/logs/m4_exp_edu_comparator

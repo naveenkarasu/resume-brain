@@ -1,0 +1,35 @@
+model:
+  name: m5_judge
+  type: lightgbm
+  task: regression
+
+data:
+  sources:
+    - netsol
+    - ats_score
+    - resume_jd_fit
+  features: 13
+  target: overall_score  # 0-100
+
+training:
+  num_estimators: 300
+  learning_rate: 0.05
+  max_depth: 5
+  num_leaves: 31
+  subsample: 0.8
+  colsample_bytree: 0.8
+  early_stopping_rounds: 30
+  metric: rmse
+  verbose: 10
+
+evaluation:
+  metrics:
+    - spearman
+    - ndcg_at_5
+  targets:
+    spearman: 0.50
+    ndcg_at_5: 0.70
+
+output:
+  model_dir: training/models/m5_judge
+  log_dir: training/logs/m5_judge

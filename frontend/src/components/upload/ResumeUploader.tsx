@@ -30,7 +30,7 @@ export default function ResumeUploader() {
           ? 'border-blue-400 bg-blue-500/10'
           : resumeFile
             ? 'border-green-500/50 bg-green-500/5'
-            : 'border-white/10 hover:border-white/20 bg-white/[0.02]'
+            : 'border-white/10 hover:border-white/20 bg-slate-900/80'
         }
       `}
     >

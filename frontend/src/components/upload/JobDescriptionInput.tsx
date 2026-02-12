@@ -14,7 +14,7 @@ export default function JobDescriptionInput() {
         placeholder="Paste the job description here..."
         rows={8}
         maxLength={10000}
-        className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-600 resize-none focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/25 transition-colors"
+        className="w-full bg-slate-900/80 border border-white/10 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-600 resize-none focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/25 transition-colors"
       />
       <div className="text-right text-xs text-gray-600 mt-1">
         {jobDescription.length} / 10,000

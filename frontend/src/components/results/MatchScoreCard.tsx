@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import type { ScoreBreakdown, SectionAnalysis } from '../../api/types';
 
 function scoreColor(score: number): string {
@@ -72,11 +73,27 @@ export default function MatchScoreCard({
   experienceYears,
   educationLevel,
 }: Props) {
+  const [displayScore, setDisplayScore] = useState(0);
+
+  useEffect(() => {
+    const duration = 1500;
+    const startTime = performance.now();
+    let raf: number;
+    function animate(time: number) {
+      const progress = Math.min((time - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayScore(Math.round(eased * overallScore));
+      if (progress < 1) raf = requestAnimationFrame(animate);
+    }
+    raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
+  }, [overallScore]);
+
   return (
-    <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6 space-y-6">
+    <div className="bg-slate-900/80 border border-white/10 rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div className="text-center">
-        <div className={`text-6xl font-bold ${scoreColor(overallScore)}`}>
-          {overallScore}
+        <div className={`text-5xl sm:text-6xl font-bold tabular-nums ${scoreColor(overallScore)}`}>
+          {displayScore}
         </div>
         <div className="text-gray-500 text-sm mt-1">Match Score</div>
         <div className="text-gray-600 text-xs mt-0.5">

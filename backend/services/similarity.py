@@ -10,14 +10,18 @@ logger = logging.getLogger(__name__)
 
 # Lazy-loaded SBERT model (loaded on first use)
 # Use all-MiniLM-L6-v2 (~80MB) for free-tier deployments; JobBERT-v2 (~425MB) for local/GPU
+# Set DISABLE_SBERT=1 on memory-constrained hosts (e.g. Render free tier 512MB)
 import os
 _SBERT_MODEL_NAME = os.environ.get("SBERT_MODEL", "all-MiniLM-L6-v2")
+_SBERT_DISABLED = os.environ.get("DISABLE_SBERT", "").strip() in ("1", "true", "yes")
 _sbert_model = None
 
 
 def _get_sbert_model():
     """Load SBERT model lazily on first call."""
     global _sbert_model
+    if _SBERT_DISABLED:
+        return None
     if _sbert_model is None:
         try:
             from sentence_transformers import SentenceTransformer
@@ -25,7 +29,7 @@ def _get_sbert_model():
             _sbert_model = SentenceTransformer(_SBERT_MODEL_NAME)
             logger.info("%s model loaded successfully", _SBERT_MODEL_NAME)
         except Exception as e:
-            logger.warning("Failed to load JobBERT-v2 model: %s", e)
+            logger.warning("Failed to load SBERT model: %s", e)
     return _sbert_model
 
 

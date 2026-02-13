@@ -10,3 +10,5 @@ services:
         sync: false
       - key: CORS_ORIGINS
         value: '["https://naveenkarasu.github.io"]'
+      - key: DISABLE_SBERT
+        value: "1"

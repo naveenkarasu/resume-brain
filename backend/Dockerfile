@@ -1,24 +1,20 @@
-FROM python:3.12-slim AS builder
-
-WORKDIR /app
-
-# Install CPU-only PyTorch first (much smaller than GPU version)
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Pre-download the SBERT model so it's cached in the image
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
-
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy installed packages and cached model from builder
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
-COPY --from=builder /root/.cache/huggingface /root/.cache/huggingface
+# Use the lightweight requirements for Render (no PyTorch/SBERT/transformers)
+# Set DISABLE_SBERT=1 to skip model loading at runtime
+COPY requirements-render.txt requirements-render.txt
+COPY requirements.txt requirements.txt
+
+ARG REQUIREMENTS_FILE=requirements-render.txt
+RUN pip install --no-cache-dir -r ${REQUIREMENTS_FILE}
+
+# Only pre-download SBERT when using full requirements
+RUN if [ "$REQUIREMENTS_FILE" = "requirements.txt" ]; then \
+      pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
+      python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"; \
+    fi
 
 COPY . .
 

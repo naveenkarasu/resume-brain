@@ -8,20 +8,22 @@ from sklearn.metrics.pairwise import cosine_similarity as sklearn_cosine
 
 logger = logging.getLogger(__name__)
 
-# Lazy-loaded JobBERT-v2 model (loaded on first use, ~425MB)
-# TechWolf/JobBERT-v2: trained on millions of job postings, 1024-dim embeddings
+# Lazy-loaded SBERT model (loaded on first use)
+# Use all-MiniLM-L6-v2 (~80MB) for free-tier deployments; JobBERT-v2 (~425MB) for local/GPU
+import os
+_SBERT_MODEL_NAME = os.environ.get("SBERT_MODEL", "all-MiniLM-L6-v2")
 _sbert_model = None
 
 
 def _get_sbert_model():
-    """Load JobBERT-v2 model lazily on first call."""
+    """Load SBERT model lazily on first call."""
     global _sbert_model
     if _sbert_model is None:
         try:
             from sentence_transformers import SentenceTransformer
 
-            _sbert_model = SentenceTransformer("TechWolf/JobBERT-v2")
-            logger.info("JobBERT-v2 model loaded successfully")
+            _sbert_model = SentenceTransformer(_SBERT_MODEL_NAME)
+            logger.info("%s model loaded successfully", _SBERT_MODEL_NAME)
         except Exception as e:
             logger.warning("Failed to load JobBERT-v2 model: %s", e)
     return _sbert_model

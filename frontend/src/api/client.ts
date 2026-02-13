@@ -1,6 +1,7 @@
 import type { AnalysisResponse, HealthResponse } from './types';
+import { getApiBaseUrl } from '../utils/platform';
 
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const BASE_URL = getApiBaseUrl();
 
 export async function checkHealth(): Promise<HealthResponse> {
   const res = await fetch(`${BASE_URL}/health`);

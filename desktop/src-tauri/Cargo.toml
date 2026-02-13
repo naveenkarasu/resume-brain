@@ -1,6 +1,6 @@
 [package]
 name = "resume-brain-desktop"
-version = "1.0.0"
+version = "2.0.0"
 description = "Resume Brain desktop app with bundled ML backend"
 authors = ["Resume Brain"]
 edition = "2021"
@@ -15,6 +15,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-shell = "2"
+tauri-plugin-store = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }

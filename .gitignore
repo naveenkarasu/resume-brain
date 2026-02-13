@@ -40,5 +40,10 @@ resume/
 # Research repos (embedded git repos, large datasets)
 Research/
 
+# Desktop build artifacts
+desktop/src-tauri/binaries/resume-brain-*
+desktop/src-tauri/binaries/_internal/
+desktop/src-tauri/target/
+
 # Windows reserved names
 nul

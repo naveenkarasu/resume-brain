@@ -55,9 +55,64 @@ When Gemini is unavailable, the local NLP pipeline still produces differentiated
                        section_parser
 ```
 
-## Quick Start
+## Desktop App (v2.0.0)
 
-### Backend
+Resume Brain is also available as a standalone desktop app for Windows and macOS. Everything runs locally — no server setup needed. Internet is only required for Gemini LLM calls when you provide an API key.
+
+### Install
+
+Download the latest release from [GitHub Releases](../../releases):
+- **Windows**: `.msi` (recommended) or `.exe` (NSIS installer)
+- **macOS**: `.dmg`
+
+### Setup
+
+1. Launch Resume Brain after installing
+2. Wait for the loading screen to finish (the backend starts automatically)
+3. Click the **gear icon** in the header to open Settings
+4. (Optional) Enter your **Gemini API key** and click Save — the backend restarts with the key
+   - Get a free key at https://aistudio.google.com/apikey
+   - Without a key, analysis still works using local NLP (TF-IDF + Sentence-BERT), just no AI-powered bullet rewrites or ATS resume generation
+
+### System Tray
+
+- Closing the window minimizes to the system tray (the backend stays running)
+- Click the tray icon to show the window again
+- Right-click the tray icon → **Quit** to fully exit and stop the backend
+
+### Build from Source
+
+Prerequisites: Python 3.12, Node.js 20+, Rust (stable), PyInstaller
+
+```bash
+# 1. Build backend executable
+cd resume-brain/backend
+python -m venv .venv && .venv/Scripts/activate  # or source .venv/bin/activate
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements.txt && pip install pyinstaller
+python build_exe.py
+
+# 2. Setup sidecar
+cd ../desktop
+powershell -ExecutionPolicy Bypass -File setup-sidecar.ps1  # Windows
+# bash setup-sidecar.sh                                      # macOS/Linux
+
+# 3. Install dependencies
+cd ../frontend && npm install
+cd ../desktop && npm install
+
+# 4. Run in dev mode or build
+npx tauri dev          # dev mode with hot reload
+npx tauri build        # produce installer
+```
+
+---
+
+## Web App
+
+### Quick Start
+
+#### Backend
 ```bash
 cd resume-brain/backend
 python -m venv .venv && source .venv/bin/activate
@@ -69,14 +124,14 @@ uvicorn main:app --reload
 
 Note: First run downloads the Sentence-BERT model (~80MB). Use the CPU-only PyTorch index to save ~1.5GB of disk space.
 
-### Frontend
+#### Frontend
 ```bash
 cd resume-brain/frontend
 npm install
 npm run dev
 ```
 
-### Docker
+#### Docker
 ```bash
 cd resume-brain
 cp .env.example .env  # Add your GEMINI_API_KEY
@@ -113,6 +168,8 @@ Open http://localhost:3000
 **Backend**: Python 3.12, FastAPI, Google Gemini 2.5 Flash, scikit-learn (TF-IDF), sentence-transformers (SBERT), pdfplumber, pydantic-settings
 
 **Frontend**: React 18, TypeScript, Vite, Three.js, @react-three/fiber, Tailwind CSS, Zustand, react-dropzone
+
+**Desktop**: Tauri v2, Rust, PyInstaller (sidecar), system tray
 
 **Deploy**: Docker Compose, GitHub Actions, GitHub Pages
 

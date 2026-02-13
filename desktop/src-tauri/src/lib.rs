@@ -1,6 +1,10 @@
 use std::sync::Mutex;
 use std::time::Duration;
-use tauri::Manager;
+use tauri::{
+    AppHandle, Emitter, Manager,
+    menu::{MenuBuilder, MenuItemBuilder},
+    tray::TrayIconBuilder,
+};
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::CommandChild;
 
@@ -29,9 +33,102 @@ async fn wait_for_backend(max_retries: u32) -> bool {
         }
         tokio::time::sleep(Duration::from_millis(500)).await;
     }
-    eprintln!("[sidecar] Backend failed to start after {} retries", max_retries);
+    eprintln!(
+        "[sidecar] Backend failed to start after {} retries",
+        max_retries
+    );
     false
 }
+
+/// Read the API key from the store.
+fn read_api_key(app: &AppHandle) -> String {
+    let store = tauri_plugin_store::StoreBuilder::new(app, "settings.json")
+        .build();
+    match store {
+        Ok(s) => s
+            .get("gemini_api_key")
+            .and_then(|v| v.as_str().map(String::from))
+            .unwrap_or_default(),
+        Err(_) => String::new(),
+    }
+}
+
+/// Spawn the sidecar backend process, passing the API key as an env var.
+async fn spawn_sidecar(app: AppHandle) {
+    println!("[sidecar] Starting resume-brain backend...");
+
+    let api_key = read_api_key(&app);
+
+    let shell = app.shell();
+    let mut sidecar_command = shell
+        .sidecar("binaries/resume-brain")
+        .expect("Failed to create sidecar command");
+
+    if !api_key.is_empty() {
+        sidecar_command = sidecar_command.env("GEMINI_API_KEY", &api_key);
+        println!("[sidecar] API key provided ({} chars)", api_key.len());
+    } else {
+        println!("[sidecar] No API key set — running without LLM");
+    }
+
+    match sidecar_command.spawn() {
+        Ok((mut rx, child)) => {
+            // Store the child process for cleanup
+            let state = app.state::<SidecarState>();
+            *state.0.lock().unwrap() = Some(child);
+
+            // Log sidecar output in background
+            tauri::async_runtime::spawn(async move {
+                use tauri_plugin_shell::process::CommandEvent;
+                while let Some(event) = rx.recv().await {
+                    match event {
+                        CommandEvent::Stdout(line) => {
+                            println!("[sidecar:out] {}", String::from_utf8_lossy(&line));
+                        }
+                        CommandEvent::Stderr(line) => {
+                            eprintln!("[sidecar:err] {}", String::from_utf8_lossy(&line));
+                        }
+                        CommandEvent::Terminated(payload) => {
+                            println!("[sidecar] Process terminated: {:?}", payload);
+                            break;
+                        }
+                        CommandEvent::Error(err) => {
+                            eprintln!("[sidecar] Error: {}", err);
+                            break;
+                        }
+                        _ => {}
+                    }
+                }
+            });
+
+            // Wait for backend to become healthy (up to 60 seconds)
+            if wait_for_backend(120).await {
+                println!("[sidecar] Backend is ready!");
+                let _ = app.emit("backend-ready", true);
+            } else {
+                eprintln!("[sidecar] Backend failed to start!");
+                let _ = app.emit("backend-ready", false);
+            }
+        }
+        Err(e) => {
+            eprintln!("[sidecar] Failed to spawn: {}", e);
+            let _ = app.emit("backend-ready", false);
+        }
+    }
+}
+
+/// Kill the currently-running sidecar process if any.
+fn kill_sidecar(app: &AppHandle) {
+    let state = app.state::<SidecarState>();
+    let child = state.0.lock().unwrap().take();
+    if let Some(child) = child {
+        println!("[sidecar] Killing backend process...");
+        let _ = child.kill();
+        println!("[sidecar] Backend process killed.");
+    }
+}
+
+// ── IPC Commands ──
 
 #[tauri::command]
 async fn backend_status() -> Result<String, String> {
@@ -42,82 +139,97 @@ async fn backend_status() -> Result<String, String> {
     }
 }
 
+#[tauri::command]
+fn get_api_key(app: AppHandle) -> Result<String, String> {
+    Ok(read_api_key(&app))
+}
+
+#[tauri::command]
+fn set_api_key(app: AppHandle, key: String) -> Result<(), String> {
+    let store = tauri_plugin_store::StoreBuilder::new(&app, "settings.json")
+        .build()
+        .map_err(|e| e.to_string())?;
+    store.set("gemini_api_key", serde_json::Value::String(key));
+    store.save().map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn restart_sidecar(app: AppHandle) -> Result<(), String> {
+    kill_sidecar(&app);
+    // Small delay to ensure port is freed
+    tokio::time::sleep(Duration::from_millis(500)).await;
+    let _ = app.emit("backend-ready", false);
+    spawn_sidecar(app).await;
+    Ok(())
+}
+
+// ── App Entry ──
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_store::Builder::default().build())
         .manage(SidecarState(Mutex::new(None)))
-        .invoke_handler(tauri::generate_handler![backend_status])
+        .invoke_handler(tauri::generate_handler![
+            backend_status,
+            get_api_key,
+            set_api_key,
+            restart_sidecar
+        ])
         .setup(|app| {
             let app_handle = app.handle().clone();
 
-            // Spawn sidecar in a background task
-            tauri::async_runtime::spawn(async move {
-                println!("[sidecar] Starting resume-brain backend...");
+            // ── System tray ──
+            let show = MenuItemBuilder::with_id("show", "Show Window").build(app)?;
+            let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
+            let menu = MenuBuilder::new(app)
+                .item(&show)
+                .separator()
+                .item(&quit)
+                .build()?;
 
-                // Launch the sidecar binary
-                let shell = app_handle.shell();
-                let sidecar_command = shell.sidecar("binaries/resume-brain")
-                    .expect("Failed to create sidecar command");
-
-                match sidecar_command.spawn() {
-                    Ok((mut rx, child)) => {
-                        // Store the child process for cleanup
-                        let state = app_handle.state::<SidecarState>();
-                        *state.0.lock().unwrap() = Some(child);
-
-                        // Log sidecar output in background
-                        tauri::async_runtime::spawn(async move {
-                            use tauri_plugin_shell::process::CommandEvent;
-                            while let Some(event) = rx.recv().await {
-                                match event {
-                                    CommandEvent::Stdout(line) => {
-                                        println!("[sidecar:out] {}", String::from_utf8_lossy(&line));
-                                    }
-                                    CommandEvent::Stderr(line) => {
-                                        eprintln!("[sidecar:err] {}", String::from_utf8_lossy(&line));
-                                    }
-                                    CommandEvent::Terminated(payload) => {
-                                        println!("[sidecar] Process terminated: {:?}", payload);
-                                        break;
-                                    }
-                                    CommandEvent::Error(err) => {
-                                        eprintln!("[sidecar] Error: {}", err);
-                                        break;
-                                    }
-                                    _ => {}
-                                }
-                            }
-                        });
-
-                        // Wait for backend to become healthy (up to 60 seconds)
-                        if wait_for_backend(120).await {
-                            println!("[sidecar] Backend is ready!");
-                            // Emit event to frontend that backend is ready
-                            let _ = app_handle.emit("backend-ready", true);
-                        } else {
-                            eprintln!("[sidecar] Backend failed to start!");
-                            let _ = app_handle.emit("backend-ready", false);
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().cloned().expect("no app icon"))
+                .tooltip("Resume Brain")
+                .menu(&menu)
+                .on_menu_event(move |app, event| match event.id().as_ref() {
+                    "show" => {
+                        if let Some(w) = app.get_webview_window("main") {
+                            let _ = w.show();
+                            let _ = w.set_focus();
                         }
                     }
-                    Err(e) => {
-                        eprintln!("[sidecar] Failed to spawn: {}", e);
-                        let _ = app_handle.emit("backend-ready", false);
+                    "quit" => {
+                        kill_sidecar(app);
+                        app.exit(0);
                     }
-                }
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let tauri::tray::TrayIconEvent::Click { .. } = event {
+                        let app = tray.app_handle();
+                        if let Some(w) = app.get_webview_window("main") {
+                            let _ = w.show();
+                            let _ = w.set_focus();
+                        }
+                    }
+                })
+                .build(app)?;
+
+            // ── Spawn sidecar ──
+            tauri::async_runtime::spawn(async move {
+                spawn_sidecar(app_handle).await;
             });
 
             Ok(())
         })
         .on_window_event(|window, event| {
-            // Kill sidecar when the window closes
-            if let tauri::WindowEvent::Destroyed = event {
-                let state = window.state::<SidecarState>();
-                if let Some(child) = state.0.lock().unwrap().take() {
-                    println!("[sidecar] Killing backend process...");
-                    let _ = child.kill();
-                    println!("[sidecar] Backend process killed.");
-                }
+            // Minimize to tray on close instead of quitting
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let _ = window.hide();
+                api.prevent_close();
             }
         })
         .run(tauri::generate_context!())

@@ -1,12 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicedoc/tauridocs/main/src/schemas/config.schema.json",
   "productName": "Resume Brain",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "identifier": "com.resume-brain.app",
   "build": {
-    "beforeDevCommand": "npm run dev -- --port 5173",
+    "beforeDevCommand": "cd ../../frontend && npm run dev -- --port 5173",
     "devUrl": "http://localhost:5173",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "cd ../../frontend && npm run build",
     "frontendDist": "../../frontend/dist"
   },
   "app": {
@@ -28,17 +28,20 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["msi", "nsis"],
+    "targets": "all",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
-      "icons/icon.ico"
+      "icons/icon.ico",
+      "icons/icon.icns"
     ],
     "externalBin": [
       "binaries/resume-brain"
     ],
-    "resources": []
+    "resources": {
+      "binaries/_internal": "./_internal"
+    }
   },
   "plugins": {}
 }

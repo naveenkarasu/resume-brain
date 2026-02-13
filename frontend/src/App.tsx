@@ -9,11 +9,21 @@ import MatchScoreCard from './components/results/MatchScoreCard';
 import MissingKeywordsCard from './components/results/MissingKeywordsCard';
 import BulletRewritesCard from './components/results/BulletRewritesCard';
 import ATSVersionCard from './components/results/ATSVersionCard';
+import SettingsModal from './components/settings/SettingsModal';
 import { useAnalysisStore } from './store/analysisStore';
+import { useSettingsStore } from './store/settingsStore';
+import { useBackendReady } from './hooks/useBackendReady';
 
 function App() {
   const { phase, result, isDemo, loadingStage } = useAnalysisStore();
+  const backendReady = useBackendReady();
+  const loadApiKey = useSettingsStore((s) => s.loadApiKey);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Load API key on mount (desktop only — no-ops in web)
+  useEffect(() => {
+    loadApiKey();
+  }, [loadApiKey]);
 
   // Drive content panel opacity + pointer-events from page scroll position
   useEffect(() => {
@@ -55,6 +65,26 @@ function App() {
 
   return (
     <div className="relative">
+      {/* ── Backend loading overlay (desktop sidecar startup) ── */}
+      {!backendReady && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#0a0a1a]">
+          <div className="text-center space-y-4">
+            <div className="w-14 h-14 mx-auto rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl">
+              RB
+            </div>
+            <div className="text-white text-lg font-medium">Resume Brain</div>
+            <div className="text-gray-400 text-sm animate-pulse">Starting backend...</div>
+            <div className="flex justify-center gap-1.5 pt-2">
+              <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0ms]" />
+              <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:150ms]" />
+              <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:300ms]" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <SettingsModal />
+
       {/* ── Background layers (fixed, behind everything) ── */}
       <BrainScene />
       <div className="orb orb-1" />

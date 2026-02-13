@@ -5,6 +5,7 @@ services:
     dockerfilePath: backend/Dockerfile.render
     dockerContext: backend
     plan: free
+    healthCheckPath: /health
     envVars:
       - key: GEMINI_API_KEY
         sync: false

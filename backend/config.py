@@ -1,16 +1,4 @@
-import os
 from pydantic_settings import BaseSettings
-
-
-def _parse_cors_origins() -> list[str] | None:
-    """Parse CORS_ORIGINS env var as comma-separated string or JSON list."""
-    raw = os.environ.get("CORS_ORIGINS")
-    if not raw:
-        return None
-    if raw.startswith("["):
-        import json
-        return json.loads(raw)
-    return [o.strip() for o in raw.split(",") if o.strip()]
 
 
 class Settings(BaseSettings):
@@ -34,5 +22,4 @@ class Settings(BaseSettings):
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "protected_namespaces": ("settings_",)}
 
 
-_cors_override = _parse_cors_origins()
-settings = Settings(**{"cors_origins": _cors_override} if _cors_override else {})
+settings = Settings()

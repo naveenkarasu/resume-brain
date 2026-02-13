@@ -304,7 +304,7 @@ export default function BrainMesh({ phase, score }: Props) {
 
   // Load planet texture (or fallback for non-textured shapes)
   const texturePath = selectedShape.textured
-    ? `/textures/planets/${selectedShape.texturePath}`
+    ? `${import.meta.env.BASE_URL}textures/planets/${selectedShape.texturePath}`
     : FALLBACK_TEX;
   const planetTexture = useTexture(texturePath);
 

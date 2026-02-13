@@ -5,7 +5,7 @@ import * as THREE from 'three';
 
 export default function SpaceSkybox() {
   const ref = useRef<THREE.Mesh>(null!);
-  const texture = useTexture('/textures/2k_stars_milky_way.jpg');
+  const texture = useTexture(`${import.meta.env.BASE_URL}textures/2k_stars_milky_way.jpg`);
 
   useFrame((_, delta) => {
     ref.current.rotation.y += delta * 0.002;
